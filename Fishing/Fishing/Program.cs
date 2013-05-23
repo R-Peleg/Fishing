@@ -8,6 +8,9 @@ namespace Fishing
 {
     class Program
     {
+        static const int SCORE1 = 3;
+        static const int SCORE2 = 7;
+
         static void Main(string[] args)
         {
             Process p = new Process();
@@ -39,7 +42,7 @@ namespace Fishing
                     output.Add(l);
                 }
 
-                int score3 = 0, score7 = 0;
+                int score1 = 0, score2 = 0;
                 foreach (string item in output)
                 {
                     var split = item.Split(' ').ToList();
@@ -54,12 +57,13 @@ namespace Fishing
                         continue;
                     int scores = int.Parse(split[index + 1]);
 
-                    if (depth == 3)
-                        score3 = scores;
-                    else if (depth == 7)
-                        score7 = scores;
+                    if (depth == SCORE1)
+                        score1 = scores;
+                    else if (depth == SCORE2)
+                        score2 = scores;
                 }
-                sum += (score7 - score3) * (score7 - score3);
+
+                sum += (score1 - score2) * (score1 - score2);
             }
 
             Console.WriteLine("Total sum of squares:");
