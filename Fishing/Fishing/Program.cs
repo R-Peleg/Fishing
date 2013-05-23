@@ -8,8 +8,12 @@ namespace Fishing
 {
     class Program
     {
-        static const int SCORE1 = 3;
-        static const int SCORE2 = 7;
+        const int SCORE1 = 3;
+        const int SCORE2 = 7;
+        const string PARAM = "Aggressiveness";
+        const int LOWER_BOUND = 0;
+        const int UPPER_BOUND = 200;
+        const int STEP = 10;
 
         static void Main(string[] args)
         {
@@ -25,49 +29,65 @@ namespace Fishing
 
             Console.WriteLine(p.StandardOutput.ReadLine());
 
-            int sum = 0;
+            int minP = -1;
+            int minSum = int.MaxValue ;
 
-            foreach (String fen in System.IO.File.ReadLines("positions.txt"))
+            for (int i = LOWER_BOUND; i < UPPER_BOUND; i += STEP)
             {
-                p.StandardInput.WriteLine("position fen " + fen);
-                p.StandardInput.WriteLine("go depth 9");
-                p.StandardInput.Flush();
-
-                var output = new List<string>();
-
-                string l = "";
-                while (!l.StartsWith("bestmove"))
+                Console.WriteLine("Trying with " + PARAM + " = " + i);
+                int sum = 0;
+                foreach (String fen in System.IO.File.ReadLines("positions.txt"))
                 {
-                    l = p.StandardOutput.ReadLine();
-                    output.Add(l);
-                }
+                    p.StandardInput.WriteLine("setoption name " + PARAM + " value " + i + "\n");
+                    p.StandardInput.WriteLine("position fen " + fen);
+                    p.StandardInput.WriteLine("go depth 9");
+                    p.StandardInput.Flush();
 
-                int score1 = 0, score2 = 0;
-                foreach (string item in output)
+                    var output = new List<string>();
+
+                    string l = "";
+                    while (l == null || !l.StartsWith("bestmove"))
+                    {
+                        l = p.StandardOutput.ReadLine();
+                        output.Add(l);
+                    }
+
+                    int score1 = 0, score2 = 0;
+                    foreach (string item in output)
+                    {
+                        if (item == null)
+                            continue;
+                        var split = item.Split(' ').ToList();
+
+                        int index = split.FindIndex(A => A == "depth");
+                        if (index == -1)
+                            continue;
+                        int depth = int.Parse(split[index + 1]);
+
+                        index = split.FindIndex(A => A == "cp");
+                        if (index == -1)
+                            continue;
+                        int scores = int.Parse(split[index + 1]);
+
+                        if (depth == SCORE1)
+                            score1 = scores;
+                        else if (depth == SCORE2)
+                            score2 = scores;
+                    }
+
+                    sum += (score1 - score2) * (score1 - score2);
+                }
+                Console.WriteLine("Total sum of squares:");
+                Console.WriteLine(sum);
+                if (sum < minSum)
                 {
-                    var split = item.Split(' ').ToList();
-
-                    int index = split.FindIndex(A => A == "depth");
-                    if (index == -1)
-                        continue;
-                    int depth = int.Parse(split[index + 1]);
-
-                    index = split.FindIndex(A => A == "cp");
-                    if (index == -1)
-                        continue;
-                    int scores = int.Parse(split[index + 1]);
-
-                    if (depth == SCORE1)
-                        score1 = scores;
-                    else if (depth == SCORE2)
-                        score2 = scores;
+                    minSum = sum;
+                    minP = i;
                 }
-
-                sum += (score1 - score2) * (score1 - score2);
             }
-
-            Console.WriteLine("Total sum of squares:");
-            Console.WriteLine(sum);
+            Console.WriteLine();
+            Console.WriteLine("Minimal param:" + minP);
+            Console.WriteLine("Minimal sum of sqares:" + minSum);
 
             Console.ReadKey();
         }
