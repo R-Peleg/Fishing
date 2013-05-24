@@ -41,102 +41,103 @@ namespace Fishing
             Console.WriteLine(p.StandardOutput.ReadLine());
 
             int minP = -1;
-            int minSum = int.MaxValue ;
+            int minSum = int.MaxValue;
 
             int maxHits = 0;
             int maxHitsP = -1;
 
-            IEnumerable<string> lines = System.IO.File.ReadLines("positions.txt");
+
 
             for (int i = LOWER_BOUND; i < UPPER_BOUND; i += STEP)
             {
                 int bmHits = 0;
 
                 Console.WriteLine("" + PARAM + " = " + i + ":");
-                    int sum = 0;
-                    foreach (String fen in lines)
+                int sum = 0;
+                IEnumerable<string> lines = System.IO.File.ReadLines("positions.txt");
+                foreach (String fen in lines)
+                {
+                    p.StandardInput.WriteLine("setoption name Hash value 1");
+                    p.StandardInput.WriteLine("setoption name Clear Hash");
+                    p.StandardInput.WriteLine("setoption name " + PARAM + " value " + i);
+                    p.StandardInput.WriteLine("position fen " + fen);
+                    p.StandardInput.WriteLine("go depth " + (SCORE2 + 2));
+                    p.StandardInput.Flush();
+
+                    var output = new List<string>();
+
+                    string l = "";
+                    while (l == null || !l.StartsWith("bestmove"))
                     {
-                        p.StandardInput.WriteLine("setoption name Hash value 1");
-                        p.StandardInput.WriteLine("setoption name Clear Hash");
-                        p.StandardInput.WriteLine("setoption name " + PARAM + " value " + i);
-                        p.StandardInput.WriteLine("position fen " + fen);
-                        p.StandardInput.WriteLine("go depth " + (SCORE2 + 2));
-                        p.StandardInput.Flush();
-
-                        var output = new List<string>();
-
-                        string l = "";
-                        while (l == null || !l.StartsWith("bestmove"))
-                        {
-                            l = p.StandardOutput.ReadLine();
-                            output.Add(l);
-                        }
-                        System.Diagnostics.Debug.WriteLine("fen = " + fen);
-                        string move = l.Split(' ')[1];
-                        System.Diagnostics.Debug.WriteLine("move:" + move);
-                        string source = move.Substring(0, 2);
-                        string dest = move.Substring(2, 2);
-                        string piece = PieceAt(fen, source).ToUpper();
-                        System.Diagnostics.Debug.WriteLine("our move:" + piece + "-" + dest);
-
-                        var sp = fen.Split(' ').ToList();
-                        int ind = sp.IndexOf("bm");
-                        string bm = sp[ind + 1];
-                        bm = bm.Replace(";", "");
-                        bm = bm.Replace("+", "");
-                        bm = bm.Replace("x", "");
-
-                        System.Diagnostics.Debug.WriteLine("bm:" + bm);
-                        string bmDest = bm.GetLast(2);
-                        //System.Diagnostics.Debug.WriteLine("bmdest:" + bmDest);
-                        if (dest == bmDest &&
-                            (piece.ToCharArray()[0] == bm[0] || piece == "P"))
-                        {
-                            bmHits++;
-                            //System.Diagnostics.Debug.WriteLine("Our move is the best one");
-                        }
-
-                        int score1 = 0, score2 = 0;
-                        foreach (string item in output)
-                        {
-                            if (item == null)
-                                continue;
-                            var split = item.Split(' ').ToList();
-
-                            int index = split.FindIndex(A => A == "depth");
-                            if (index == -1)
-                                continue;
-                            int depth = int.Parse(split[index + 1]);
-
-                            index = split.FindIndex(A => A == "cp");
-                            if (index == -1)
-                                continue;
-                            int scores = int.Parse(split[index + 1]);
-
-                            if (depth == SCORE1)
-                                score1 = scores;
-                            else if (depth == SCORE2)
-                                score2 = scores;
-                        }
-
-                        sum += (score1 - score2) * (score1 - score2);
+                        l = p.StandardOutput.ReadLine();
+                        output.Add(l);
                     }
-                    Console.Write("\tTotal sum of squares:\t");
-                    Console.WriteLine(sum);
-                    Console.Write("\tNum of BestMove hits:\t");
-                    Console.WriteLine(bmHits);
-                    if (sum < minSum)
+                    System.Diagnostics.Debug.WriteLine("fen = " + fen);
+                    string move = l.Split(' ')[1];
+                    System.Diagnostics.Debug.WriteLine("move:" + move);
+                    string source = move.Substring(0, 2);
+                    string dest = move.Substring(2, 2);
+                    string piece = PieceAt(fen, source).ToUpper();
+                    System.Diagnostics.Debug.WriteLine("our move:" + piece + "-" + dest);
+
+                    var sp = fen.Split(' ').ToList();
+                    int ind = sp.IndexOf("bm");
+                    string bm = sp[ind + 1];
+                    bm = bm.Replace(";", "");
+                    bm = bm.Replace("+", "");
+                    bm = bm.Replace("x", "");
+
+                    System.Diagnostics.Debug.WriteLine("bm:" + bm);
+                    string bmDest = bm.GetLast(2);
+                    //System.Diagnostics.Debug.WriteLine("bmdest:" + bmDest);
+                    if (dest == bmDest &&
+                        (piece.ToCharArray()[0] == bm[0] || piece == "P"))
                     {
-                        minSum = sum;
-                        minP = i;
+                        bmHits++;
+                        //System.Diagnostics.Debug.WriteLine("Our move is the best one");
                     }
 
-                    if (bmHits > maxHits)
+                    int score1 = 0, score2 = 0;
+                    foreach (string item in output)
                     {
-                        maxHits = bmHits;
-                        maxHitsP = i;
+                        if (item == null)
+                            continue;
+                        var split = item.Split(' ').ToList();
+
+                        int index = split.FindIndex(A => A == "depth");
+                        if (index == -1)
+                            continue;
+                        int depth = int.Parse(split[index + 1]);
+
+                        index = split.FindIndex(A => A == "cp");
+                        if (index == -1)
+                            continue;
+                        int scores = int.Parse(split[index + 1]);
+
+                        if (depth == SCORE1)
+                            score1 = scores;
+                        else if (depth == SCORE2)
+                            score2 = scores;
                     }
-                
+
+                    sum += (score1 - score2) * (score1 - score2);
+                }
+                Console.Write("\tTotal sum of squares:\t");
+                Console.WriteLine(sum);
+                Console.Write("\tNum of BestMove hits:\t");
+                Console.WriteLine(bmHits);
+                if (sum < minSum)
+                {
+                    minSum = sum;
+                    minP = i;
+                }
+
+                if (bmHits > maxHits)
+                {
+                    maxHits = bmHits;
+                    maxHitsP = i;
+                }
+
             }
             Console.WriteLine();
             Console.WriteLine("Minimal param:" + minP);
@@ -151,7 +152,7 @@ namespace Fishing
         private static string PieceAt(string fen, string loc)
         {
             // row, from up to down (black to white)
-            int row = 9 - int.Parse(loc.Substring(1,1));
+            int row = 9 - int.Parse(loc.Substring(1, 1));
             //System.Diagnostics.Debug.WriteLine("row is " + row);
             int col = loc[0] - 'a' + 1;
             //System.Diagnostics.Debug.WriteLine("col is " + col);
@@ -168,7 +169,7 @@ namespace Fishing
                     return fenrow.Substring(i, 1);
                 else
                     c++;
-                
+
             }
             return null;
         }
