@@ -18,8 +18,8 @@ namespace Fishing
 
     class Program
     {
-        const int SCORE1 = 3;
-        const int SCORE2 = 7;
+        const int SCORE1 = 2;
+        const int SCORE2 = 5;
         const string PARAM = "Space";
         const int LOWER_BOUND = 0;
         const int UPPER_BOUND = 200;
@@ -72,13 +72,13 @@ namespace Fishing
                         l = p.StandardOutput.ReadLine();
                         output.Add(l);
                     }
-                    System.Diagnostics.Debug.WriteLine("fen = " + fen);
+                    //System.Diagnostics.Debug.WriteLine("fen = " + fen);
                     string move = l.Split(' ')[1];
-                    System.Diagnostics.Debug.WriteLine("move:" + move);
+                    //System.Diagnostics.Debug.WriteLine("move:" + move);
                     string source = move.Substring(0, 2);
                     string dest = move.Substring(2, 2);
                     string piece = PieceAt(fen, source).ToUpper();
-                    System.Diagnostics.Debug.WriteLine("our move:" + piece + "-" + dest);
+                    //System.Diagnostics.Debug.WriteLine("our move:" + piece + "-" + dest);
 
                     var sp = fen.Split(' ').ToList();
                     int ind = sp.IndexOf("bm");
@@ -87,11 +87,13 @@ namespace Fishing
                     bm = bm.Replace("+", "");
                     bm = bm.Replace("x", "");
 
-                    System.Diagnostics.Debug.WriteLine("bm:" + bm);
+                    //System.Diagnostics.Debug.WriteLine("bm:" + bm);
                     string bmDest = bm.GetLast(2);
                     //System.Diagnostics.Debug.WriteLine("bmdest:" + bmDest);
                     if (dest == bmDest &&
-                        (piece.ToCharArray()[0] == bm[0] || piece == "P"))
+                        (piece.ToCharArray()[0] == bm[0] || piece == "P")
+                        || (bm=="0-0" && piece == "K" && (dest=="g8" || dest == "g1"))
+                        || (bm=="0-0-0" && piece == "K" && (dest=="c8" || dest == "c1")))
                     {
                         bmHits++;
                         //System.Diagnostics.Debug.WriteLine("Our move is the best one");
